@@ -1,0 +1,373 @@
+#Below are the basic commands to interact with elastic search (execute these commands from console (kibana))
+
+GET _search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+
+POST /business/report
+{
+  "business_address": "Pune 411036",
+  "business_id": "1234",
+  "business_name": "Software Development",
+  "business_streams":{
+    "sub_stream": "Administration",
+    "main_stream" : [
+    "Development",
+    "Testing",
+    "Integration",
+    "Deployment"
+    ]
+  }
+}
+
+GET /business/report/_search
+
+POST /business/report/1234
+{
+  "business_address": "Pune 411036",
+  "business_id": "1234",
+  "business_name": "Software Development",
+  "business_streams":{
+    "sub_stream": "Administration",
+    "main_stream" : [
+    "Development",
+    "Testing",
+    "Integration",
+    "Deployment"
+    ]
+  }
+}
+
+DELETE business
+
+PUT /business 
+{
+  "settings": {
+    "index.number_of_shards": 1,
+    "index.number_of_replicas": 0
+  }
+}
+
+GET /business/report/_search
+{
+  "query": {
+    "match": {
+      "business_address": "Bangaluru"
+    }
+  }
+}
+
+GET /business/_mapping/report
+
+POST /business/report/_bulk
+{ "index": {"_id":1}}
+{"business_address": "Pune 411036","business_id": "a1","business_name": "Software Development","business_streams":{"sub_stream": "Administration","main_stream" : ["Development","Testing","Integration","Deployment"]}}
+{ "index": {"_id":2}}
+{"business_address": "Mumbai 4000312","business_id": "a2","business_name": "Machine Development","business_streams":{"sub_stream": "Administration","main_stream" : ["Development","Testing","Integration","Deployment"]}}
+{ "index": {"_id":3}}
+{"business_address": "Delhi","business_id": "a3","business_name": "Car Manufacturing","business_streams":{"sub_stream": "Administration","main_stream" : ["Development","Testing","Integration","Deployment"]}}
+{ "index": {"_id":4}}
+{"business_address": "Bangaluru","business_id": "a4","business_name": "Industrial Development","business_streams":{"sub_stream": "Administration","main_stream" : ["Development","Testing"]}}
+{ "index": {"_id":5}}
+{"business_address": "Hyderabad","business_id": "a5","business_name": "Search Engine Development","business_streams":{"sub_stream": "Administration","main_stream" : ["Integration","Deployment"]}}
+
+
+GET /business/_analyze 
+{
+  "tokenizer": "standard",
+  "text": "Ouderkerk aan de Amstel",
+  "analyzer": "autocomplete_analyzer"
+}
+
+
+
+
+DELETE /autocomplete_test
+
+PUT /autocomplete_test
+{
+  "settings" : {
+    "index" : {
+      "analysis" : {
+        "analyzer" : {
+          "autocomplete_analyzer" : {
+            "type" : "custom",
+            "tokenizer" : "lowercase",
+            "filter"    : ["asciifolding", "title_ngram"]
+          }
+        },
+        "filter" : {
+          "title_ngram" : {
+            "type" : "nGram",
+            "min_gram" : 4,
+            "max_gram" : 5
+          }
+        }
+      }
+    }
+  },
+ 
+  "mappings": {
+    "city": {
+      "properties": {
+        "city": {
+          "type": "text",
+          "analyzer": "autocomplete_analyzer",
+          "boost": 10
+        }
+      }
+    }
+  }
+}
+
+GET /autocomplete_test/_analyze 
+{
+  "tokenizer": "standard",
+  "text": "Ouderkerk aan de Amstel",
+  "analyzer": "autocomplete_analyzer"
+}
+
+GET /autocomplete_test
+
+DELETE /movies
+
+PUT movies
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "filter": {},
+        "analyzer": {
+          "keyword_analyzer": {
+            "filter": [
+              "lowercase",
+              "asciifolding",
+              "trim"
+            ],
+            "char_filter": [],
+            "type": "custom",
+            "tokenizer": "keyword"
+          },
+          "edge_ngram_analyzer": {
+            "filter": [
+              "lowercase"
+            ],
+            "tokenizer": "edge_ngram_tokenizer"
+          },
+          "edge_ngram_search_analyzer": {
+            "tokenizer": "lowercase"
+          }
+        },
+        "tokenizer": {
+          "edge_ngram_tokenizer": {
+            "type": "edge_ngram",
+            "min_gram": 2,
+            "max_gram": 5,
+            "token_chars": [
+              "letter"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "marvels": {
+      "properties": {
+        "name": {
+          "type": "text",
+          "fields": {
+            "keywordstring": {
+              "type": "text",
+              "analyzer": "keyword_analyzer"
+            },
+            "edgengram": {
+              "type": "text",
+              "analyzer": "edge_ngram_analyzer",
+              "search_analyzer": "edge_ngram_search_analyzer"
+            },
+            "completion": {
+              "type": "completion"
+            }
+          },
+          "analyzer": "standard"
+        }
+      }
+    }
+  }
+}
+
+GET /movies/marvels/_search
+
+GET /movies/marvels/_search
+{
+  "query": {
+    "prefix": {
+      "name.keywordstring": "Am"
+    }
+  }
+}
+
+GET /movies/marvels/_search
+{
+  "query": {
+    "match": {
+      "name.edgengram": "captain america the black"
+    }
+  }
+}
+
+GET /movies/marvels/_search
+{
+    "suggest": {
+        "movie-suggest" : {
+            "prefix" : "captain amarica the", 
+            "completion" : { 
+                "field" : "name.completion"
+            }
+        }
+    }
+}
+
+GET /movies/marvels/_search
+{
+    "suggest": {
+        "movie-suggest" : {
+            "prefix" : "captain amrica the", 
+            "completion" : { 
+                "field" : "name.completion"
+            }
+        }
+    }
+}
+
+
+GET /movies/marvels/_search
+{
+  "suggest": {
+    "movie-suggest-fuzzy": {
+      "prefix": "captain amerca the",
+      "completion": {
+        "field": "name.completion",
+        "fuzzy": {
+          "fuzziness": 1
+        }
+      }
+    }
+  }
+}
+
+GET /movies/_search
+
+GET /_cat/indices/?v
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+POST /movies/marvels
+{
+	"name": "Avengers: Infinity War Part 2"
+}
+POST /movies/marvels
+{
+	"name": "Captain Marvel"
+}
+POST /movies/marvels
+{
+	"name": "Black Panther"
+}
+POST /movies/marvels
+{
+	"name": "Avengers: Infinity War"
+}
+POST /movies/marvels
+{
+	"name": "Thor: Ragnarok"
+}
+POST /movies/marvels
+{
+	"name": "Guardians of the Galaxy Vol 2"
+}
+POST /movies/marvels
+{
+	"name": "Doctor Strange"
+}
+POST /movies/marvels
+{
+	"name": "Captain America: Civil War"
+}
+POST /movies/marvels
+{
+	"name": "Ant-Man"
+}
+POST /movies/marvels
+{
+	"name": "Avengers: Age of Ultron"
+}
+POST /movies/marvels
+{
+	"name": "Guardians of the Galaxy"
+}
+POST /movies/marvels
+{
+	"name": "Captain America: The Winter Soldier"
+}
+POST /movies/marvels
+{
+	"name": "Thor: The Dark World"
+}
+POST /movies/marvels
+{
+	"name": "Iron Man 3"
+}
+POST /movies/marvels
+{
+	"name": "Marvel’s The Avengers"
+}
+POST /movies/marvels
+{
+	"name": "Captain America: The First Avenger"
+}
+POST /movies/marvels
+{
+	"name": "Thor"
+}
+POST /movies/marvels
+{
+	"name": "Iron Man 2"
+}
+POST /movies/marvels
+{
+	"name": "The Incredible Hulk"
+}
+POST /movies/marvels
+{
+	"name": "Iron Man"
+}
