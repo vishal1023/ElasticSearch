@@ -371,3 +371,65 @@ POST /movies/marvels
 {
 	"name": "Iron Man"
 }
+
+
+#Delete ifany 'ecommerce' index exist
+DELETE ecommerce
+
+#Creating an ecommerce index with mapping
+PUT /ecommerce
+{
+  "mappings": {
+    "product":{
+      "properties": {
+        "name" :{
+          "type": "text"
+        },
+        "price": {
+          "type": "double"
+        },
+        "description" :{
+          "type": "text"
+        },
+        "status": {
+          "type": "text"
+        },
+        "quantity": {
+          "type": "integer"
+        },
+        "category":{
+          "type": "nested",
+          "properties": {
+            "name":{
+              "type":"text"
+            }
+          }
+        },
+        "tag":{
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+
+#Adding document to index
+
+PUT /ecommerce/product/1001
+{
+  "name": "product one",
+  "price": 100.00,
+  "description": "sample product",
+  "status": "active",
+  "quantity": 10,
+  "category": [
+    {
+      "name": "App"
+    }
+  ],
+  "tag": ["mckinsey", "product", "one", "App"]
+}
+
+GET /ecommerce/product/_search
+
+
